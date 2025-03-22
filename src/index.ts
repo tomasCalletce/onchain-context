@@ -30,11 +30,25 @@ server.tool(
   async () => {
     const tvlData = await getHistoricalTVL();
     const latestTvl = tvlData[tvlData.length - 1].tvl;
+
+    const oneDayAgoIndex = tvlData.length - 2;
+    const oneWeekAgoIndex = tvlData.length - 8;
+
+    // Calculate changes
+    const oneDayAgoTvl = tvlData[oneDayAgoIndex]?.tvl || latestTvl;
+    const oneWeekAgoTvl = tvlData[oneWeekAgoIndex]?.tvl || latestTvl;
+
+    const dailyChange = ((latestTvl - oneDayAgoTvl) / oneDayAgoTvl) * 100;
+    const weeklyChange = ((latestTvl - oneWeekAgoTvl) / oneWeekAgoTvl) * 100;
+
     return {
       content: [
         {
           type: "text",
-          text: `Current Mantle TVL: $${latestTvl.toLocaleString()}`,
+          text:
+            `Current Mantle TVL: $${latestTvl.toLocaleString()}\n` +
+            `24h Change: ${dailyChange.toFixed(2)}%\n` +
+            `7d Change: ${weeklyChange.toFixed(2)}%`,
         },
       ],
     };
