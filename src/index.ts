@@ -1,33 +1,34 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-
-const NWS_API_BASE = "https://api.weather.gov";
-const USER_AGENT = "weather-app/1.0";
+import { getTokenPrice } from "./lib/get-token-prices.js";
 
 const server = new McpServer({
-  name: "weather",
+  name: "mantle-onchain-context",
   version: "1.0.0",
 });
 
-// Add an addition tool
-server.tool("add", { a: z.number(), b: z.number() }, async ({ a, b }) => ({
-  content: [{ type: "text", text: String(a + b) }],
-}));
+server.tool(
+  "get-token-price",
+  "Get the price of a token in mantle network",
+  { contract_address: z.string() },
+  async ({ contract_address }) => {
+    const price = await getTokenPrice(contract_address);
+    return {
+      content: [
+        { type: "text", text: `Price of ${price.symbol}: ${price.price}` },
+      ],
+    };
+  }
+);
 
-// Add a dynamic greeting resource
-server.resource(
-  "greeting",
-  new ResourceTemplate("greeting://{name}", { list: undefined }),
-  async (uri, { name }) => ({
-    contents: [
-      {
-        uri: uri.href,
-        text: `Hello, ${name}!`,
-      },
-    ],
-  })
+server.tool(
+  "mantle-ltv",
+  "Get the total value locked of mantle network",
+  async () => {
+    const ltv = await getTokenLTV(contract_address);
+    return { content: [{ type: "text", text: String(ltv) }] };
+  }
 );
 
 async function main() {
