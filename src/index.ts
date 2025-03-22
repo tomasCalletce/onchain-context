@@ -3,6 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { getTokenPrice } from "./lib/get-token-prices.js";
 import { getHistoricalTVL } from "./lib/get-tvl.js";
+import { getMerchantMoeSummary } from "./lib/get-protocol.js";
 
 const server = new McpServer({
   name: "mantle-onchain-context",
@@ -34,7 +35,6 @@ server.tool(
     const oneDayAgoIndex = tvlData.length - 2;
     const oneWeekAgoIndex = tvlData.length - 8;
 
-    // Calculate changes
     const oneDayAgoTvl = tvlData[oneDayAgoIndex]?.tvl || latestTvl;
     const oneWeekAgoTvl = tvlData[oneWeekAgoIndex]?.tvl || latestTvl;
 
@@ -51,6 +51,29 @@ server.tool(
             `7d Change: ${weeklyChange.toFixed(2)}%`,
         },
       ],
+    };
+  }
+);
+
+server.tool(
+  "get-protocol-merchant-moe",
+  "Get key metrics for the Merchant Moe protocol on Mantle",
+  {},
+  async () => {
+    const summary = await getMerchantMoeSummary();
+
+    const report = [
+      `${summary.health.category} ${summary.name}`,
+      `TVL: ${summary.tvl}`,
+      `Health Score: ${summary.health.score}/100`,
+      `Social Presence: ${summary.socialPresence.platformCount} platforms`,
+      `Market Presence: ${summary.socialPresence.hasTwitter ? "Twitter" : ""} ${
+        summary.socialPresence.hasGithub ? "Github" : ""
+      } ${summary.isMultiChain ? "Multi-Chain" : "Single-Chain"}`,
+    ].join("\n");
+
+    return {
+      content: [{ type: "text", text: report }],
     };
   }
 );
