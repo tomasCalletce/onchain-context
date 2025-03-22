@@ -8,6 +8,7 @@ import {
   getTreeHouseProtocolSummary,
 } from "./lib/get-protocol.js";
 import { getStablecoinData } from "./lib/get-stablecoin.js";
+
 const server = new McpServer({
   name: "mantle-onchain-context",
   version: "1.0.0",
