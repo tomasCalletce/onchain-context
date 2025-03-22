@@ -86,22 +86,19 @@ export async function getProtocolStats(
   try {
     const data = await getProtocolData(protocolSlug);
 
-    // Calculate total TVL across all chains
     const totalTVL = Object.values(data.currentChainTvls).reduce(
       (sum, val) => sum + (val || 0),
       0
     );
     const mantleTVL = data.currentChainTvls.Mantle || 0;
 
-    // Calculate chain diversification (percentage in Mantle)
     const chainDiversification =
       totalTVL > 0 ? (mantleTVL / totalTVL) * 100 : 100;
 
-    // Determine TVL category
     const getTVLCategory = (tvl: number): "SMALL" | "MEDIUM" | "LARGE" => {
-      if (tvl < 100000) return "SMALL"; // Less than $100k
-      if (tvl < 1000000) return "MEDIUM"; // Less than $1M
-      return "LARGE"; // $1M or more
+      if (tvl < 100000) return "SMALL";
+      if (tvl < 1000000) return "MEDIUM";
+      return "LARGE";
     };
 
     const platformStrength =
@@ -166,5 +163,14 @@ export async function getMerchantMoeSummary(): Promise<ProtocolSummary> {
   } catch (error) {
     console.error("Error fetching Merchant Moe summary:", error);
     throw new Error("Failed to fetch Merchant Moe summary");
+  }
+}
+
+export async function getTreeHouseProtocolSummary(): Promise<ProtocolSummary> {
+  try {
+    return await getProtocolSummary("treehouse-protocol");
+  } catch (error) {
+    console.error("Error fetching Tree House protocol summary:", error);
+    throw new Error("Failed to fetch Tree House protocol summary");
   }
 }

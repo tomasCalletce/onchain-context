@@ -3,8 +3,11 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { getTokenPrice } from "./lib/get-token-prices.js";
 import { getHistoricalTVL } from "./lib/get-tvl.js";
-import { getMerchantMoeSummary } from "./lib/get-protocol.js";
-
+import {
+  getMerchantMoeSummary,
+  getTreeHouseProtocolSummary,
+} from "./lib/get-protocol.js";
+import { getStablecoinData } from "./lib/get-stablecoin.js";
 const server = new McpServer({
   name: "mantle-onchain-context",
   version: "1.0.0",
@@ -25,7 +28,7 @@ server.tool(
 );
 
 server.tool(
-  "mantle-ltv",
+  "get-ltv",
   "Get the total value locked of mantle network",
   {},
   async () => {
@@ -56,7 +59,7 @@ server.tool(
 );
 
 server.tool(
-  "get-protocol-merchant-moe",
+  "get-protocol-merchant-moe-summary",
   "Get key metrics for the Merchant Moe protocol on Mantle",
   {},
   async () => {
@@ -74,6 +77,59 @@ server.tool(
 
     return {
       content: [{ type: "text", text: report }],
+    };
+  }
+);
+
+server.tool(
+  "get-protocol-treehouse-protocol-summary",
+  "Get key metrics for a Tree House on Mantle",
+  {},
+  async () => {
+    const summary = await getTreeHouseProtocolSummary();
+
+    const report = [
+      `${summary.health.category} ${summary.name}`,
+      `TVL: ${summary.tvl}`,
+      `Health Score: ${summary.health.score}/100`,
+      `Social Presence: ${summary.socialPresence.platformCount} platforms`,
+      `Market Presence: ${summary.socialPresence.hasTwitter ? "Twitter" : ""} ${
+        summary.socialPresence.hasGithub ? "Github" : ""
+      } ${summary.isMultiChain ? "Multi-Chain" : "Single-Chain"}`,
+    ].join("\n");
+
+    return {
+      content: [{ type: "text", text: report }],
+    };
+  }
+);
+
+server.tool(
+  "get-USDT-tvl",
+  "Get the total value locked of USDT on Mantle",
+  {},
+  async () => {
+    const data = await getStablecoinData(1);
+    const latestTvl = data[data.length - 1].totalBridgedToUSD.peggedUSD;
+    return {
+      content: [
+        { type: "text", text: `USDT TVL: $${latestTvl.toLocaleString()}` },
+      ],
+    };
+  }
+);
+
+server.tool(
+  "get-USDC-tvl",
+  "Get the total value locked of USDC on Mantle",
+  {},
+  async () => {
+    const data = await getStablecoinData(2);
+    const latestTvl = data[data.length - 1].totalBridgedToUSD.peggedUSD;
+    return {
+      content: [
+        { type: "text", text: `USDC TVL: $${latestTvl.toLocaleString()}` },
+      ],
     };
   }
 );
