@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { getTokenPrice } from "./lib/get-token-prices.js";
+import { getHistoricalTVL } from "./lib/get-tvl.js";
 
 const server = new McpServer({
   name: "mantle-onchain-context",
@@ -25,9 +26,18 @@ server.tool(
 server.tool(
   "mantle-ltv",
   "Get the total value locked of mantle network",
+  {},
   async () => {
-    const ltv = await getTokenLTV(contract_address);
-    return { content: [{ type: "text", text: String(ltv) }] };
+    const tvlData = await getHistoricalTVL();
+    const latestTvl = tvlData[tvlData.length - 1].tvl;
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Current Mantle TVL: $${latestTvl.toLocaleString()}`,
+        },
+      ],
+    };
   }
 );
 
